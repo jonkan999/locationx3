@@ -1,5 +1,10 @@
+
 import React from 'react';
 import mapboxgl from '!mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
+//import { MapNodes } from './MapNodes.js';
+import { MapPolygons } from './MapPolygons.js';
+import Street from './Street';
+
 
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9ua2FueDMiLCJhIjoiY2t6a2NpamRlMHBnNzJwa2VwMXZienQxZSJ9.8Or2IqnhqXW72AMn6PndLg';
 
@@ -8,161 +13,123 @@ export default class App extends React.PureComponent {
     super(props);
     this.state = {
       lng: 18.036,
-      lat: 59.317,
-      zoom: 15.31
+      lat: 59.316,
+      zoom: 15.31,
+	  activePoint: 'default',
+	  iframeURL: '394639591619707',
+	  linkURL: '',
+	  spriteLng: 18.036,
+	  spriteLat: 59.316,
+	  spriteBearing: 1
+	  
     };
     this.mapContainer = React.createRef();
   }
+  
+  
+
+	
   componentDidMount() {
     const { lng, lat, zoom } = this.state;
-    const map = new mapboxgl.Map({
+    this.map = new mapboxgl.Map({
       container: this.mapContainer.current,
       style: 'mapbox://styles/jonkanx3/ckzkcsi4t002w15sekpsbw7xt',
       center: [lng, lat],
+	  pitch: 60,
+	  bearing: 40,
       zoom: zoom
     });
-	map.on('load', () => {
-		map.addSource('Hornstull', {
-			'type': 'geojson',
-			'data': {
-				'type': 'Feature',
-				'geometry': {
-					'type': 'Polygon',
-					// These coordinates outline Hornstull.
-					'coordinates': [
-						[
-							[18.033466, 59.315227],
-							[18.034969, 59.315230],
-							[18.033320, 59.317945],
-							[18.031628, 59.317828],
-							[18.033466, 59.315227]
-						]
-					]
-				}
-			}
-		});
-		map.addSource('BRFBulten', {
-			'type': 'geojson',
-			'data': {
-				'type': 'Feature',
-				'geometry': {
-					'type': 'Polygon',
-					// These coordinates outline Hornstull.
-					'coordinates': [
-						[
+	
+	this.map.getCanvas().style.cursor = 'pointer';
+	
+
+	
+
+	
+	this.map.on('load', () => {
+
+		var arrayLength = MapPolygons.length;
+		var i = 0;
+		for (i; i < arrayLength; i++) {
+			this.map.addSource(MapPolygons[i][0], {
+				'type': 'geojson',
+				'data': {
+					'type': 'Feature',
+					'geometry': {
+						'type': 'Polygon',
+						// These coordinates outline Hornstull.
+						'coordinates': [
 							
-							[18.033901, 59.316236],
-							[18.034647, 59.316325],
-							[18.034257, 59.316970],
-							[18.034698, 59.316986],
-							[18.035178, 59.316137],
-							[18.034012, 59.316037],
-							[18.033901, 59.316236]
+							MapPolygons[i][1]
+							
 						]
-					]
-				}
-			}
-		});
-		map.addSource('points', {
-			'type': 'geojson',
-			'data': {
-				'type': 'FeatureCollection',
-				'features': [
-					{
-						// feature for point Hornstull
-						'type': 'Feature',
-						'geometry': {
-							'type': 'Point',
-							'coordinates': [18.033153, 59.316858]
-						},
-						'properties': {
-							'title': 'Hornstull',
-							'color': '#CF9FFF'
-						}
-						
-					},
-					{
-						// feature for BRF Bulten
-						'type': 'Feature',
-						'geometry': {
-							'type': 'Point',
-							'coordinates': [18.034865, 59.316240]
-						},
-						'properties': {
-							'title': 'BRFBulten',
-							'color': '#A34646'
-						}
 					}
-				]
-			}
-		});
-		// Add a point layer
-		map.addLayer({
-			'id': 'Hornstull',
-			'type': 'fill-extrusion',
-			'source': 'Hornstull', // reference the data source
-			'layout': {
-				'visibility': 'none'
-			},
-			'paint': {
-				'fill-extrusion-color': '#CF9FFF', // blue color fill
-				'fill-extrusion-opacity': 0.4,
-				'fill-extrusion-height': 10
-			}
-		});
-		// Add a black outline around the polygon.
-		map.addLayer({
-			'id': 'Hornstull-outline',
-			'type': 'line',
-			'source': 'Hornstull',
-			'layout': {
-				'visibility': 'none'
-			},
-			'paint': {
-				'line-color': '#000',
-				'line-width': {
-					'type': 'exponential',
-					'base': 1,
-					'stops': [
-						[0, 1 * Math.pow(1, (0 - zoom))],
-						[24, 1 * Math.pow(1, (24 - zoom))]
-					]
+				}
+			});
+		}
+		
+		i=0;
+		var pointsData = {};
+		pointsData['type'] = 'FeatureCollection';
+		pointsData['features'] = [];
+		
+		for (i; i < arrayLength; i++) {
+			//points
+			var newFeature = {
+				"type": "Feature",
+				"geometry": {
+					"type": "Point",
+					"coordinates": MapPolygons[i][2]
+				},
+				"properties": {
+					"title": MapPolygons[i][0],
+					'color': MapPolygons[i][3],
+					"description": MapPolygons[i][7]
 				}
 			}
-		});
-		map.addLayer({
-			'id': 'BRFBulten',
-			'type': 'fill-extrusion',
-			'source': 'BRFBulten', // reference the data source
-			'layout': {
-				'visibility': 'none'
-			},
-			'paint': {
-				'fill-extrusion-color': '#A34646', // blue color fill
-				'fill-extrusion-opacity': 0.4,
-				'fill-extrusion-height': 35
-			}
-		});
-		map.addLayer({
-			'id': 'BRFBulten-outline',
-			'type': 'line',
-			'source': 'BRFBulten',
-			'layout': {
-				'visibility': 'none'
-			},
-			'paint': {
-				'line-color': '#000',
-				'line-width': {
-					'type': 'exponential',
-					'base': 1,
-					'stops': [
-						[0, 1 * Math.pow(1, (0 - zoom))],
-						[24, 1 * Math.pow(1, (24 - zoom))]
-					]
+			pointsData['features'].push(newFeature);
+			
+			//extrusions
+			this.map.addLayer({
+				'id': MapPolygons[i][0],
+				'type': 'fill-extrusion',
+				'source': MapPolygons[i][0], // reference the data source
+				'layout': {
+					'visibility': 'none'
+				},
+				'paint': {
+					'fill-extrusion-color': MapPolygons[i][3], // blue color fill
+					'fill-extrusion-opacity': 0.4,
+					'fill-extrusion-height': MapPolygons[i][4]
 				}
-			}
+			});
+
+			
+		}
+		this.map.addSource('points', {
+			'type': 'geojson',
+			'data': pointsData
 		});
-		map.addLayer({
+		//map.addLayer({
+		//	'id': 'BRFBulten-outline',
+		//	'type': 'line',
+		//	'source': 'BRFBulten',
+		//	'layout': {
+		//		'visibility': 'none'
+		//	},
+		//	'paint': {
+		//		'line-color': '#000',
+		//		'line-width': {
+		//			'type': 'exponential',
+		//			'base': 1,
+		//			'stops': [
+		//				[0, 1 * Math.pow(1, (0 - zoom))],
+		//				[24, 1 * Math.pow(1, (24 - zoom))]
+		//			]
+		//		}
+		//	}
+		//});
+		this.map.addLayer({
 			'id': 'points',
 			'type': 'circle',
 			'source': 'points',
@@ -177,94 +144,157 @@ export default class App extends React.PureComponent {
 				'circle-radius': {
 					'base': 2,
 					'stops': [
-						[0, 7 * Math.pow(2, (0 - zoom))],
-						[24, 7 * Math.pow(2, (24 - zoom))]
+						[0, 150 * Math.pow(1.5, (0 - zoom))],
+						[24, 150 * Math.pow(1.5, (24 - zoom))]
 					]
 				},
 				'circle-stroke-width': {
 					'base': 2,
 					'stops': [
-						[0, 0.5 * Math.pow(2, (0 - zoom))],
-						[24, 0.5 * Math.pow(2, (24 - zoom))]
+						[0, 15 * Math.pow(1.5, (0 - zoom))],
+						[24, 15 * Math.pow(1.5, (24 - zoom))]
 					]
 				}
 			}
 		});
 		
-	});
-	
-	map.on('click', 'points', (e) => {
-		if (e.features[0].properties.title==='Hornstull') {
-			const visibility = map.getLayoutProperty(
-				e.features[0].properties.title,
-				'visibility'
-			);
-			 
-			// Toggle layer visibility by changing the layout object's visibility property.
-			if (visibility === 'visible') {
-				map.setLayoutProperty(e.features[0].properties.title, 'visibility', 'none');
-				map.setLayoutProperty(e.features[0].properties.title+'-outline', 'visibility', 'none');
-			} else {
-				this.className = 'active';
-				map.setLayoutProperty(
-					e.features[0].properties.title,
-					'visibility',
-					'visible'
-				);
-				map.setLayoutProperty(
-					e.features[0].properties.title+'-outline',
-					'visibility',
-					'visible'
-				);
+		//Adding Mapillary sprite
+		this.map.loadImage(
+			'https://docs.mapbox.com/mapbox-gl-js/assets/cat.png',
+			(error, image) => {
+				if (error) throw error;
+
+				// Add the image to the map style.
+				this.map.addImage('cat', image);
+
+				// Add a data source containing one point feature.
+				this.map.addSource('sprite', {
+					'type': 'geojson',
+					'data': {
+						'type': 'FeatureCollection',
+						'features': [{
+							'type': 'Feature',
+							'geometry': {
+								'type': 'Point',
+								'coordinates': [this.state.spriteLng, this.state.spriteLat]
+							},
+							'properties': {
+								'rotation': 90
+							}
+						}]
+					}
+				});
+
+				// Add a layer to use the image to represent the data.
+				this.map.addLayer({
+					'id': 'cat-sprite',
+					'type': 'symbol',
+					'source': 'sprite', // reference the data source
+					'layout': {
+						'icon-image': 'cat', // reference the image
+						'icon-size': 0.15,
+						'icon-rotate': ['get', 'rotation']
+						
+					}
+				});
 			}
-        
-		} else if (e.features[0].properties.title==='BRFBulten') {
-			const visibility = map.getLayoutProperty(
-				e.features[0].properties.title,
-				'visibility'
-			);
-			 
-			// Toggle layer visibility by changing the layout object's visibility property.
-			if (visibility === 'visible') {
-				map.setLayoutProperty(e.features[0].properties.title, 'visibility', 'none');
-				map.setLayoutProperty(e.features[0].properties.title+'-outline', 'visibility', 'none');
-				this.className = '';
-			} else {
-				this.className = 'active';
-				map.setLayoutProperty(
-					e.features[0].properties.title,
-					'visibility',
-					'visible'
-				);
-				map.setLayoutProperty(
-					e.features[0].properties.title+'-outline',
-					'visibility',
-					'visible'
-				);
-			}
-        
-		} else {
-		}
-		
+		);
 	});
 
-    map.on('move', () => {
+	this.map.on('click', 'points', (e) => {
+		const coordinates = e.features[0].geometry.coordinates.slice();
+		//var ObjectArray = ['BRFBulten','Hornstull'];
+		var arrayLength = MapPolygons.length;
+		var i = 0;
+
+
+		
+		if (this.map.getLayoutProperty(e.features[0].properties.title,'visibility')==='none') {
+			for (i; i < arrayLength; i++) {
+				//Turn off all but clicked highlights
+				if (e.features[0].properties.title === MapPolygons[i][0]) {
+					var popup = new mapboxgl.Popup({closeButton: false, className: e.features[0].properties.title, 'border-top-color': 'rgba(205, 205, 205,0)' })
+					.setLngLat(coordinates)
+					.setHTML(e.features[0].properties.description)
+					.setMaxWidth('none')
+					.addTo(this.map);
+					this.map.setLayoutProperty(MapPolygons[i][0], 'visibility', 'visible');
+					this.setState({
+						activePoint: MapPolygons[i][0],
+						iframeURL: MapPolygons[i][5],
+						linkURL: MapPolygons[i][6],
+					  });
+				} else {
+					this.map.setLayoutProperty(MapPolygons[i][0], 'visibility', 'none');
+				}
+			}
+		} else {
+			for (i; i < arrayLength; i++) {
+				//Turn off all
+				this.map.setLayoutProperty(MapPolygons[i][0], 'visibility', 'none');
+			}
+		}
+	});
+
+    this.map.on('move', () => {
       this.setState({
-        lng: map.getCenter().lng.toFixed(4),
-        lat: map.getCenter().lat.toFixed(4),
-        zoom: map.getZoom().toFixed(2)
+        lng: this.map.getCenter().lng.toFixed(4),
+        lat: this.map.getCenter().lat.toFixed(4),
+        zoom: this.map.getZoom().toFixed(2)
       });
     });
   }
+  
+
+  
+      handleCallback = (position,pov) =>{
+        this.setState({spriteLat: position.lat,
+					   spriteLng: position.lng,
+					   spriteBearing: pov.bearing})
+    }
+	
+		componentDidUpdate(prevProps,prevState) {
+		if (prevState.spriteLng !== this.state.spriteLng) {
+			console.log(this.map.getSource('sprite')._data.features[0].geometry.coordinates);
+					this.map.getSource('sprite').setData({
+			"type": "FeatureCollection",
+					"features": [{
+						"type": "Feature",
+						"geometry": {
+							"type": "Point",
+							"coordinates": [this.state.spriteLng, this.state.spriteLat]
+						},
+						"properties": {
+							'rotation': this.state.spriteBearing
+						}
+					}]
+		});
+			
+		}
+	}
+
+	
   render() {
-    const { lng, lat, zoom } = this.state;
+    const { lng, lat, zoom, iframeURL, spriteLat} = this.state;
     return (
-      <div>
-        <div className="sidebar">
-          Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
-        </div>
-        <div ref={this.mapContainer} className="map-container" />
-      </div>
+	<div>
+		<Street parentCallback = {this.handleCallback.bind(this)}  imageId={iframeURL} />
+			<div ref={this.mapContainer} class="map-container" />
+			<div>
+				<div class={this.state.activePoint+"-container"}>
+				<a href='https://www.hemnet.se/bostad/lagenhet-2rum-sodermalm-hogalid-stockholms-kommun-lorensbergsgatan-5a-18333355' target="_blank" title="Opens in a new window">Link</a>
+				<h>{this.state.spriteBearing}</h>
+				</div>
+			</div>
+				
+		
+			
+	</div>
+
     );
   }
 }
+	    //<div class="sidebar">
+	    //    Longitude: {lng} | Latitude: {lat} | Zoom: {zoom} | Photoid: {iframeURL}
+		//</div>
+
